@@ -16,4 +16,5 @@ def _help():
 ```
 -h,--help: Help menu
 -i,--image: Process image
+-d,--debug: Log messages.
 """
