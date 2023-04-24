@@ -36,8 +36,8 @@ async def on_message(message):
                 await message.channel.send("No valid image!")
                 return
             
-            # TODO: Criar finção aleatória para guardar o arquivo. É ruim guardar arquivo com
-            # o nome do attachment original.
+            # TODO: Criar função aleatória para o nome do arquivo. É ruim guardar arquivo com
+            # o nome do attachment original, podemos ter conflotos.
             attachURL = requests.get(attach.url)
             file_name = attach.url.split('/')[-1]
             with open(file_name, "wb") as f:
