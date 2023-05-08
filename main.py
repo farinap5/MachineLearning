@@ -3,6 +3,7 @@ import discord
 import requests
 import utils
 import logging
+import json
 
 intents = discord.Intents.all()
 client = discord.Client(command_prefix='!', intents=intents)
@@ -10,6 +11,10 @@ client = discord.Client(command_prefix='!', intents=intents)
 logFile = "logs.txt"
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO, filename=logFile)
 
+# Temos um arquivo json contendo quais servers e canais o bot deve interagir com.
+# O json deve ter listas como wrap do valor.
+access = open("./access.json", "r").read()
+accessDict = json.loads(access)
 
 # TODO: Mover para utils
 imgTypes = ["png","jpg","jpeg"]
@@ -21,11 +26,19 @@ async def on_ready():
  
 @client.event
 async def on_message(message):
+    #print(str(message.guild.id)+":",str(message.channel.id))
+    # validar acesso com accessDict do access.json
+    # É preciso melhorar isso, e tirar o "try except"
+    try:
+        if str(message.channel.id) not in accessDict[str(message.guild.id)]:
+            return
+    except :
+        pass
     if message.author == client.user:
         return
     
+    
     cmds = message.content.split(" ")
-
     if cmds[0] != "d":
         return
     if "--help" in message.content or "-h" in message.content:
@@ -54,10 +67,15 @@ async def on_message(message):
                 logging.info("File "+file_name+" written to disk from "+str(message.author))
                 f.close
                 await message.channel.send("Imagem "+file_name+" salva.")
+
+
     if "--debug" in message.content or "-d" in message.content:
-        logging.info("User is debugging "+str(message.author))
-        file = open(logFile, "r").readlines()
-        await message.channel.send(f"""
+        if "access" == cmds[2]:
+            await message.channel.send(str(accessDict))
+        else:
+            logging.info("User is debugging "+str(message.author))
+            file = open(logFile, "r").readlines()
+            await message.channel.send(f"""
 ```
 {"".join(file[-20:-1])}        
 ```
