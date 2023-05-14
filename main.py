@@ -4,6 +4,9 @@ import requests
 import utils
 import logging
 import json
+import cv2
+import numpy as np
+import tensorflow as tf
 
 intents = discord.Intents.all()
 client = discord.Client(command_prefix='!', intents=intents)
@@ -19,6 +22,10 @@ accessDict = json.loads(access)
 # TODO: Mover para utils
 imgTypes = ["png","jpg","jpeg"]
 imgFold = "./img/"
+
+
+# Carregar modelo
+model = tf.keras.saving.load_model("/root/test-v1.h5")
 
 @client.event
 async def on_ready():
@@ -37,14 +44,19 @@ async def on_message(message):
     if message.author == client.user:
         return
     
-    
     cmds = message.content.split(" ")
     if cmds[0] != "d":
         return
+
+
+    ## --help
     if "--help" in message.content or "-h" in message.content:
         logging.info("Help asked from "+str(message.author))
         await message.channel.send(utils._help())
         return
+
+
+    ## --image
     if "--image" in message.content or "-i" in message.content:
         logging.info("Image pattern received from "+str(message.author))
         if message.attachments == []:
@@ -62,16 +74,32 @@ async def on_message(message):
             # o nome do attachment original, podemos ter conflotos.
             attachURL = requests.get(attach.url)
             file_name = attach.url.split('/')[-1]
-            with open(imgFold+"/"+file_name, "wb") as f:
+            with open(imgFold+file_name, "wb") as f:
                 f.write(attachURL.content)
                 logging.info("File "+file_name+" written to disk from "+str(message.author))
                 f.close
-                await message.channel.send("Imagem "+file_name+" salva.")
+                #await message.channel.send("Imagem "+file_name+" salva.")
+
+                image_size = (90, 90)
+                imagem = cv2.imread(imgFold+file_name)
+                imagem = cv2.resize(imagem, image_size)
+                imagem = imagem.reshape((1,90,90,3))
+                imagem = tf.cast(imagem/255. ,tf.float32)
+                result_clss = model.predict(imagem)
+                i = np.argmax(result_clss)
+                classes = ["uma Margarida", "um Dente de leao", "uma Rosa", "um Girassol", "uma Tupila"]
+                await message.channel.send("Esta imagem corresponde à " + classes[i])
+                logging.info("Image "+file_name+" predicted.")
 
 
+
+
+
+    ## --debug
     if "--debug" in message.content or "-d" in message.content:
-        if "access" == cmds[2]:
-            await message.channel.send(str(accessDict))
+        if len(cmds) == 3:
+            if "access" == cmds[2]:
+                await message.channel.send(str(accessDict))
         else:
             logging.info("User is debugging "+str(message.author))
             file = open(logFile, "r").readlines()
