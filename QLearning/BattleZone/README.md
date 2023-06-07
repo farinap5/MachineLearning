@@ -16,3 +16,8 @@ pip3 install gymnasium\[accept-rom-license\]
       0,   0,   3, 222, 144, 221, 82, 240
 ), 14): 0.0
 ```
+
+using converter function:
+```
+(-10481676, 16): 0.0,
+```
