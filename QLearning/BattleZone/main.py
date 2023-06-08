@@ -64,6 +64,9 @@ def main(eps,gamma,lr,randAct,qTable,env,actions):
         stats.append((i,totalEpReward,doneTax,truncTax))
         #if i%10 == 0:
         print("Iteration:",i," Total Rewards:",totalEpReward," Done:",doneTax," Trunc:",truncTax)
+    mts = open("metrics.txt","wb")
+    pickle.dump(stats,mts)
+    mts.close()
     return qTable
 
 env = gym.make("ALE/BattleZone-v5", render_mode=args.mode, obs_type="ram")
@@ -83,7 +86,7 @@ else:
 eps = args.epoch
 gamma = 0.4
 lr = 0.1
-randAct = 0.1
+randAct = 0.0
 
 qt = main(eps,gamma,lr,randAct,qTable,env,actions)
 f = open(args.save,"wb")
